@@ -1,0 +1,6 @@
+{
+  "name": "VetTop - Cộng đồng Thú Cưng & Nhận Nuôi",
+  "description": "Mạng xã hội và cộng đồng thú cưng Việt Nam: chia sẻ kinh nghiệm chăm sóc, tìm kiếm người nhận nuôi, đánh giá phòng khám thú y và kết nối bạn bè.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
