@@ -150,14 +150,24 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
           {/* Name & Role */}
           <div className="space-y-1 mb-4">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-lg font-extrabold text-slate-900 leading-tight">
                 {user.name}
               </h3>
               {isVet ? (
                 <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                  <span>Bác sĩ thú y chính quy</span>
+                  <span>Bác sĩ thú y</span>
+                </span>
+              ) : user.userType === 'petshop' ? (
+                <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <span>🛍️</span>
+                  <span>Cửa hàng Pet Shop</span>
+                </span>
+              ) : user.userType === 'spa' ? (
+                <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <span>✂️</span>
+                  <span>Spa & Pet Hotel</span>
                 </span>
               ) : (
                 <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
@@ -167,7 +177,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
 
             <p className="text-xs font-semibold text-blue-600">
-              {user.role || (isVet ? 'Bác sĩ thú y' : 'Thành viên VetTop')}
+              {user.role || (isVet ? 'Bác sĩ thú y' : user.userType === 'petshop' ? 'Cửa hàng Pet Shop' : 'Thành viên VetTop')}
             </p>
 
             <p className="text-xs text-slate-600 leading-relaxed pt-1">
@@ -184,28 +194,32 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
           </div>
 
-          {/* DYNAMIC SECTION FOR VET: CLINIC INFORMATION */}
-          {isVet && (user.clinicName || user.clinicAddress) && (
-            <div className="p-3.5 rounded-xl bg-indigo-50/80 border border-indigo-200/80 space-y-2 mb-4">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900">
-                <Building2 className="w-4 h-4 text-indigo-600" />
-                <span>Thông tin phòng khám phụ trách:</span>
+          {/* DYNAMIC SECTION FOR VET OR PET SHOP OR SPA */}
+          {(user.clinicName || user.clinicAddress) && (
+            <div className={`p-3.5 rounded-xl border space-y-2 mb-4 ${
+              isVet ? 'bg-indigo-50/80 border-indigo-200/80' :
+              user.userType === 'petshop' ? 'bg-amber-50/80 border-amber-200/80' :
+              'bg-rose-50/80 border-rose-200/80'
+            }`}>
+              <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                {isVet && <Building2 className="w-4 h-4 text-indigo-600" />}
+                {user.userType === 'petshop' && <span className="text-sm">🛍️</span>}
+                {user.userType === 'spa' && <span className="text-sm">✂️</span>}
+                <span>
+                  {isVet ? 'Thông tin phòng khám phụ trách:' :
+                   user.userType === 'petshop' ? 'Thông tin Cửa hàng Pet Shop:' :
+                   'Thông tin cơ sở Spa & Hotel:'}
+                </span>
               </div>
 
               <div className="text-xs space-y-1.5 text-slate-700 pl-1">
                 <p className="font-bold text-slate-900 text-sm">
-                  🏥 {user.clinicName}
+                  {user.clinicName || user.businessName}
                 </p>
                 {user.clinicAddress && (
                   <p className="flex items-start gap-1.5 text-slate-600">
                     <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
                     <span>{user.clinicAddress}</span>
-                  </p>
-                )}
-                {user.specialty && (
-                  <p className="flex items-center gap-1.5 text-slate-600">
-                    <Stethoscope className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span>Chuyên khoa: <span className="font-semibold text-slate-800">{user.specialty}</span></span>
                   </p>
                 )}
                 {user.phone && (
@@ -214,12 +228,34 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     <span>Hotline: <span className="font-semibold text-slate-800">{user.phone}</span></span>
                   </p>
                 )}
-                {user.licenseNumber && (
-                  <p className="flex items-center gap-1.5 text-[11px] text-slate-500">
-                    <Award className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                    <span>Mã CCHN: {user.licenseNumber}</span>
+                {user.email && (
+                  <p className="text-[11px] text-blue-700">
+                    Email nhận lịch: <span className="font-semibold">{user.email}</span>
                   </p>
                 )}
+                {/* Service badges */}
+                <div className="flex flex-wrap gap-1 pt-1">
+                  {isVet && (
+                    <span className="text-[9px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded">
+                      🩺 Khám chữa bệnh
+                    </span>
+                  )}
+                  {user.hasPetShop && (
+                    <span className="text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">
+                      🛍️ Kèm Pet Shop
+                    </span>
+                  )}
+                  {user.hasSpa && (
+                    <span className="text-[9px] font-bold bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded">
+                      ✂️ Kèm Spa Grooming
+                    </span>
+                  )}
+                  {user.hasPetHotel && (
+                    <span className="text-[9px] font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.2 rounded">
+                      🏨 Kèm Pet Hotel
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           )}

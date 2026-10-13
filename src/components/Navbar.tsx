@@ -255,13 +255,23 @@ export const Navbar: React.FC<NavbarProps> = ({
                       🩺
                     </span>
                   )}
+                  {currentUser.userType === 'petshop' && (
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-amber-500 rounded-full flex items-center justify-center text-[8px] text-white ring-1 ring-white" title="Cửa hàng Pet Shop">
+                      🛍️
+                    </span>
+                  )}
+                  {currentUser.userType === 'spa' && (
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-rose-500 rounded-full flex items-center justify-center text-[8px] text-white ring-1 ring-white" title="Spa & Grooming">
+                      ✂️
+                    </span>
+                  )}
                 </div>
                 <div className="hidden md:flex flex-col text-left">
-                  <span className="text-xs font-bold text-slate-800 max-w-[110px] truncate leading-tight">
+                  <span className="text-xs font-bold text-slate-800 max-w-[130px] truncate leading-tight">
                     {currentUser.name}
                   </span>
-                  <span className="text-[10px] text-blue-600 font-semibold leading-tight">
-                    {currentUser.userType === 'vet' ? 'Bác sĩ thú y' : 'Chủ nuôi'}
+                  <span className="text-[10px] text-blue-600 font-semibold leading-tight max-w-[130px] truncate">
+                    {currentUser.clinicName || (currentUser.userType === 'vet' ? 'Bác sĩ thú y' : currentUser.userType === 'petshop' ? 'Cửa hàng Pet Shop' : currentUser.userType === 'spa' ? 'Spa Grooming' : 'Chủ nuôi')}
                   </span>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-500" />

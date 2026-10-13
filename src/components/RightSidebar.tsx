@@ -42,7 +42,18 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   const [toplistTab, setToplistTab] = useState<'clinic' | 'petshop' | 'spa' | 'hotel'>('clinic');
 
   const filteredPlaces = toplistPlaces
-    .filter((p) => p.category === toplistTab)
+    .filter((p) => {
+      if (toplistTab === 'clinic') return p.category === 'clinic';
+      if (toplistTab === 'petshop') return p.category === 'petshop' || p.hasPetShop;
+      if (toplistTab === 'spa') return p.category === 'spa' || p.hasSpa;
+      if (toplistTab === 'hotel') return p.category === 'hotel' || p.hasPetHotel;
+      return p.category === toplistTab;
+    })
+    .sort((a, b) => {
+      if (a.isRealRegistered && !b.isRealRegistered) return -1;
+      if (!a.isRealRegistered && b.isRealRegistered) return 1;
+      return 0;
+    })
     .slice(0, 5);
 
   return (

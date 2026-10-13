@@ -3,11 +3,18 @@ export interface User {
   name: string;
   avatar: string;
   email?: string;
+  password?: string;
   role?: string;
-  userType?: 'owner' | 'vet';
+  userType?: 'owner' | 'vet' | 'petshop' | 'spa' | 'hotel';
+  businessType?: 'clinic' | 'petshop' | 'spa' | 'hotel';
+  businessName?: string;
   clinicName?: string;
   clinicAddress?: string;
   clinicLogo?: string;
+  hasPetShop?: boolean;
+  hasSpa?: boolean;
+  hasPetHotel?: boolean;
+  services?: string[];
   specialty?: string;
   phone?: string;
   licenseNumber?: string;
@@ -17,6 +24,7 @@ export interface User {
   mutualFriends?: number;
   isFriend?: boolean;
   friendRequestSent?: boolean;
+  isRealRegistered?: boolean;
 }
 
 export interface Pet {
@@ -152,6 +160,11 @@ export interface ToplistPlace {
   services?: string[];
   priceRange?: string;
   description?: string;
+  hasPetShop?: boolean;
+  hasSpa?: boolean;
+  hasPetHotel?: boolean;
+  isRealRegistered?: boolean;
+  ownerId?: string;
 }
 
 export interface AppointmentBooking {

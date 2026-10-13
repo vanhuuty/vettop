@@ -40,13 +40,20 @@ export const ToplistView: React.FC<ToplistViewProps> = ({
   const categories = [
     { id: 'all', label: 'Tất cả dịch vụ', icon: Trophy, count: places.length },
     { id: 'clinic', label: 'Phòng khám thú y', icon: Building2, count: places.filter(p => p.category === 'clinic').length },
-    { id: 'petshop', label: 'Petshop phụ kiện', icon: ShoppingBag, count: places.filter(p => p.category === 'petshop').length },
-    { id: 'spa', label: 'Spa & Grooming', icon: Scissors, count: places.filter(p => p.category === 'spa').length },
-    { id: 'hotel', label: 'Pet Hotel khách sạn thú cưng', icon: Hotel, count: places.filter(p => p.category === 'hotel').length },
+    { id: 'petshop', label: 'Petshop phụ kiện', icon: ShoppingBag, count: places.filter(p => p.category === 'petshop' || p.hasPetShop).length },
+    { id: 'spa', label: 'Spa & Grooming', icon: Scissors, count: places.filter(p => p.category === 'spa' || p.hasSpa).length },
+    { id: 'hotel', label: 'Pet Hotel khách sạn thú cưng', icon: Hotel, count: places.filter(p => p.category === 'hotel' || p.hasPetHotel).length },
   ];
 
   const filteredPlaces = places.filter((p) => {
-    if (activeCategory !== 'all' && p.category !== activeCategory) return false;
+    if (activeCategory !== 'all') {
+      const match =
+        p.category === activeCategory ||
+        (activeCategory === 'petshop' && p.hasPetShop) ||
+        (activeCategory === 'spa' && p.hasSpa) ||
+        (activeCategory === 'hotel' && p.hasPetHotel);
+      if (!match) return false;
+    }
     if (selectedCity !== 'all' && !p.city.toLowerCase().includes(selectedCity.toLowerCase())) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -58,6 +65,10 @@ export const ToplistView: React.FC<ToplistViewProps> = ({
       );
     }
     return true;
+  }).sort((a, b) => {
+    if (a.isRealRegistered && !b.isRealRegistered) return -1;
+    if (!a.isRealRegistered && b.isRealRegistered) return 1;
+    return 0;
   });
 
   return (
@@ -201,9 +212,41 @@ export const ToplistView: React.FC<ToplistViewProps> = ({
               {/* Information */}
               <div className="p-4 space-y-2.5">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">
-                    {place.name}
-                  </h3>
+                  <div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h3 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug">
+                        {place.name}
+                      </h3>
+                      {place.isRealRegistered && (
+                        <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-md">
+                          ✓ Đã xác minh
+                        </span>
+                      )}
+                    </div>
+                    {/* Multi-service chips */}
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {place.category === 'clinic' && (
+                        <span className="text-[9px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded">
+                          🩺 Thú y
+                        </span>
+                      )}
+                      {(place.category === 'petshop' || place.hasPetShop) && (
+                        <span className="text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">
+                          🛍️ Kèm Pet Shop
+                        </span>
+                      )}
+                      {(place.category === 'spa' || place.hasSpa) && (
+                        <span className="text-[9px] font-bold bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded">
+                          ✂️ Kèm Spa
+                        </span>
+                      )}
+                      {(place.category === 'hotel' || place.hasPetHotel) && (
+                        <span className="text-[9px] font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.2 rounded">
+                          🏨 Kèm Hotel
+                        </span>
+                      )}
+                    </div>
+                  </div>
                   <div className="flex items-center gap-1 text-amber-600 font-extrabold text-xs shrink-0 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
                     <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
                     <span>{place.rating.toFixed(1)}</span>

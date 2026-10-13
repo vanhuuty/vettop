@@ -7,9 +7,16 @@ import {
   MessageCircleQuestion, 
   Plus, 
   Sparkles,
-  ChevronDown 
+  ChevronDown,
+  Building2,
+  Calendar,
+  ShoppingBag,
+  Scissors,
+  Hotel,
+  CheckCircle2,
+  ChevronRight
 } from 'lucide-react';
-import { User } from '../types';
+import { User, ToplistPlace } from '../types';
 import heroBannerImg from '../assets/images/vettop_hero_banner_1791795554306.jpg';
 
 interface FeedHeaderProps {
@@ -19,6 +26,10 @@ interface FeedHeaderProps {
   setActiveFilterType: (filter: string) => void;
   sortBy: string;
   setSortBy: (sort: string) => void;
+  places?: ToplistPlace[];
+  onOpenClinicDetails?: (place: ToplistPlace) => void;
+  onOpenBooking?: (place: ToplistPlace) => void;
+  onOpenRegisterBusiness?: () => void;
 }
 
 export const FeedHeader: React.FC<FeedHeaderProps> = ({
@@ -28,7 +39,22 @@ export const FeedHeader: React.FC<FeedHeaderProps> = ({
   setActiveFilterType,
   sortBy,
   setSortBy,
+  places = [],
+  onOpenClinicDetails,
+  onOpenBooking,
+  onOpenRegisterBusiness,
 }) => {
+  // Get highlighted places (prioritizing real registered places first, then Hòa Vang, etc.)
+  const displayedPlaces = places
+    .slice()
+    .sort((a, b) => {
+      if (a.isRealRegistered && !b.isRealRegistered) return -1;
+      if (!a.isRealRegistered && b.isRealRegistered) return 1;
+      if (a.name.includes('Hòa Vang') && !b.name.includes('Hòa Vang')) return -1;
+      return 0;
+    })
+    .slice(0, 6);
+
   return (
     <div className="space-y-4 mb-4">
       {/* 1. Hero Banner matching screenshot */}
@@ -45,7 +71,7 @@ export const FeedHeader: React.FC<FeedHeaderProps> = ({
         <div className="relative z-10 px-6 sm:px-8 py-5 text-white max-w-xl">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md text-[11px] font-bold tracking-wide uppercase mb-2">
             <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>Mạng xã hội & Cứu trợ thú cưng</span>
+            <span>Mạng xã hội Thú Y & Cứu trợ thú cưng</span>
           </div>
 
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight leading-tight text-white drop-shadow-sm">
@@ -54,12 +80,126 @@ export const FeedHeader: React.FC<FeedHeaderProps> = ({
           </h2>
 
           <p className="text-xs sm:text-sm text-blue-50 mt-1.5 line-clamp-2 max-w-md">
-            Đánh giá phòng khám · Kinh nghiệm nuôi thú · Tìm kiếm người nhận nuôi · Cùng nhau chăm sóc thú cưng tốt hơn!
+            Đánh giá phòng khám thú y · Đặt lịch khám trực tuyến · Cửa hàng Pet Shop · Nhận nuôi thú cưng!
           </p>
         </div>
       </div>
 
-      {/* 2. Post Creation Input Capsule matching screenshot */}
+      {/* 2. REAL VERIFIED BUSINESSES HIGHLIGHT ON HOMEPAGE (Phòng khám & Pet Shop thực tế) */}
+      {displayedPlaces.length > 0 && (
+        <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-200/80">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
+                <span>Cơ sở Thú Y & Pet Shop hoạt động trên hệ thống</span>
+              </h3>
+            </div>
+            {onOpenRegisterBusiness && (
+              <button
+                onClick={onOpenRegisterBusiness}
+                className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
+              >
+                <span>+ Đăng ký phòng khám / Pet Shop</span>
+                <ChevronRight className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
+          {/* Horizontal scrollable cards */}
+          <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-thin">
+            {displayedPlaces.map((place) => (
+              <div
+                key={place.id}
+                className="w-64 shrink-0 bg-slate-50/80 hover:bg-slate-50 border border-slate-200/70 hover:border-blue-300 rounded-xl p-3 transition-all flex flex-col justify-between group shadow-2xs"
+              >
+                <div>
+                  <div className="flex items-start gap-2.5 mb-2">
+                    {place.logoUrl ? (
+                      <img
+                        src={place.logoUrl}
+                        alt={place.name}
+                        className="w-10 h-10 rounded-xl object-cover border border-slate-200 bg-white shrink-0 shadow-2xs group-hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                        {place.category === 'petshop' ? '🛍️' : '🩺'}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1">
+                        <h4 
+                          onClick={() => onOpenClinicDetails && onOpenClinicDetails(place)}
+                          className="text-xs font-bold text-slate-900 truncate group-hover:text-blue-600 cursor-pointer"
+                        >
+                          {place.name}
+                        </h4>
+                        {place.isRealRegistered && (
+                          <span title="Đã xác minh" className="shrink-0 flex items-center">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-500 truncate flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span>{place.city}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Badges for Services (Pet Shop, Spa, Pet Hotel, Clinic) */}
+                  <div className="flex flex-wrap gap-1 mb-2.5">
+                    {place.category === 'clinic' && (
+                      <span className="text-[9px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded-md">
+                        🩺 Thú y
+                      </span>
+                    )}
+                    {(place.category === 'petshop' || place.hasPetShop) && (
+                      <span className="text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-md flex items-center gap-0.5">
+                        <ShoppingBag className="w-2.5 h-2.5" />
+                        <span>Pet Shop</span>
+                      </span>
+                    )}
+                    {(place.category === 'spa' || place.hasSpa) && (
+                      <span className="text-[9px] font-bold bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded-md flex items-center gap-0.5">
+                        <Scissors className="w-2.5 h-2.5" />
+                        <span>Spa</span>
+                      </span>
+                    )}
+                    {(place.category === 'hotel' || place.hasPetHotel) && (
+                      <span className="text-[9px] font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.2 rounded-md flex items-center gap-0.5">
+                        <Hotel className="w-2.5 h-2.5" />
+                        <span>Hotel</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-1.5 pt-2 border-t border-slate-200/60">
+                  <button
+                    onClick={() => onOpenClinicDetails && onOpenClinicDetails(place)}
+                    className="flex-1 py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-[11px] font-bold rounded-lg border border-slate-200 transition-colors"
+                  >
+                    Xem cơ sở
+                  </button>
+                  {place.category === 'clinic' && onOpenBooking && (
+                    <button
+                      onClick={() => onOpenBooking(place)}
+                      className="flex-1 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-lg shadow-2xs transition-colors flex items-center justify-center gap-1"
+                    >
+                      <Calendar className="w-3 h-3" />
+                      <span>Đặt lịch</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 3. Post Creation Input Capsule matching screenshot */}
       <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-200/80">
         <div className="flex items-center gap-3 mb-3">
           {currentUser ? (
@@ -77,7 +217,13 @@ export const FeedHeader: React.FC<FeedHeaderProps> = ({
             onClick={() => onOpenCreatePost('general')}
             className="flex-1 text-left px-4 py-2.5 bg-slate-100 hover:bg-slate-200/70 text-slate-500 hover:text-slate-700 text-xs sm:text-sm rounded-full transition-all"
           >
-            {currentUser ? 'Bạn đang nghĩ gì về thú cưng của mình?' : 'Đăng nhập hoặc đăng ký để chia sẻ cùng cộng đồng...'}
+            {currentUser 
+              ? (currentUser.userType === 'vet'
+                  ? `${currentUser.name} ơi, bạn muốn chia sẻ kiến thức y khoa hoặc thông báo gì?`
+                  : currentUser.userType === 'petshop'
+                  ? `${currentUser.name} ơi, cửa hàng có sản phẩm mới hoặc ưu đãi nào muốn đăng?`
+                  : 'Bạn đang nghĩ gì về thú cưng của mình?')
+              : 'Đăng nhập hoặc đăng ký để chia sẻ cùng cộng đồng...'}
           </button>
         </div>
 
@@ -126,7 +272,7 @@ export const FeedHeader: React.FC<FeedHeaderProps> = ({
         </div>
       </div>
 
-      {/* 3. Filter Tabs & Sort Row matching screenshot */}
+      {/* 4. Filter Tabs & Sort Row matching screenshot */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-1">
         {/* Filter Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs font-semibold">

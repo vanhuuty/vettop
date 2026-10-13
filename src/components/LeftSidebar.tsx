@@ -211,8 +211,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         </div>
       </div>
 
-      {/* DYNAMIC SECTION FOR VETERINARIAN VS PET OWNER VS GUEST */}
-      {isVet ? (
+      {/* DYNAMIC SECTION FOR VETERINARIAN VS PET SHOP VS SPA VS PET OWNER */}
+      {currentUser?.userType === 'vet' ? (
         /* Veterinarian Clinic Card */
         <div className="bg-white rounded-2xl p-3.5 shadow-xs border border-slate-200/80 space-y-2.5">
           <div className="flex items-center justify-between">
@@ -221,7 +221,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               <span>Phòng khám phụ trách</span>
             </h3>
             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded-full">
-              Bác sĩ
+              Bác sĩ Thú Y
             </span>
           </div>
 
@@ -256,9 +256,119 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 <span className="line-clamp-2">{currentUser.clinicAddress}</span>
               </p>
             )}
+            
+            {/* Service badges */}
+            <div className="flex flex-wrap gap-1 pt-1 border-t border-indigo-100/80">
+              <span className="text-[9px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded">
+                🩺 Thú y
+              </span>
+              {currentUser?.hasPetShop && (
+                <span className="text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">
+                  🛍️ Kèm Pet Shop
+                </span>
+              )}
+              {currentUser?.hasSpa && (
+                <span className="text-[9px] font-bold bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded">
+                  ✂️ Kèm Spa
+                </span>
+              )}
+              {currentUser?.hasPetHotel && (
+                <span className="text-[9px] font-bold bg-purple-100 text-purple-700 px-1.5 py-0.2 rounded">
+                  🏨 Kèm Hotel
+                </span>
+              )}
+            </div>
+
             {currentUser?.specialty && (
               <p className="text-[10px] text-indigo-700 font-semibold pt-0.5">
                 Chuyên môn: {currentUser.specialty}
+              </p>
+            )}
+          </div>
+        </div>
+      ) : currentUser?.userType === 'petshop' ? (
+        /* Pet Shop Card */
+        <div className="bg-white rounded-2xl p-3.5 shadow-xs border border-slate-200/80 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              <ShoppingBag className="w-4 h-4 text-amber-600" />
+              <span>Cửa hàng Pet Shop</span>
+            </h3>
+            <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded-full">
+              Chủ Shop
+            </span>
+          </div>
+
+          <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-100 text-xs space-y-2">
+            <div className="flex items-center gap-2.5">
+              {currentUser?.clinicLogo ? (
+                <img 
+                  src={currentUser.clinicLogo} 
+                  alt="Logo" 
+                  className="w-10 h-10 rounded-xl object-cover border border-amber-200 bg-white shrink-0 shadow-xs" 
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                  <ShoppingBag className="w-5 h-5" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="font-bold text-slate-900 truncate">
+                  {currentUser?.clinicName || currentUser?.businessName || 'Cửa hàng Pet Shop'}
+                </p>
+                {currentUser?.phone && (
+                  <p className="text-[10px] text-amber-800 truncate font-semibold">
+                    Hotline: {currentUser.phone}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {currentUser?.clinicAddress && (
+              <p className="text-[11px] text-slate-600 flex items-start gap-1">
+                <MapPin className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
+                <span className="line-clamp-2">{currentUser.clinicAddress}</span>
+              </p>
+            )}
+
+            <div className="flex flex-wrap gap-1 pt-1 border-t border-amber-100">
+              <span className="text-[9px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">
+                🛍️ Pet Shop
+              </span>
+              {currentUser?.hasSpa && (
+                <span className="text-[9px] font-bold bg-rose-100 text-rose-700 px-1.5 py-0.2 rounded">
+                  ✂️ Dịch vụ Spa
+                </span>
+              )}
+              {currentUser?.hasPetHotel && (
+                <span className="text-[9px] font-bold bg-indigo-100 text-indigo-700 px-1.5 py-0.2 rounded">
+                  🏨 Trông giữ Hotel
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : currentUser?.userType === 'spa' ? (
+        /* Spa Card */
+        <div className="bg-white rounded-2xl p-3.5 shadow-xs border border-slate-200/80 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              <Scissors className="w-4 h-4 text-rose-600" />
+              <span>Cơ sở Spa & Pet Hotel</span>
+            </h3>
+            <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded-full">
+              Quản lý
+            </span>
+          </div>
+
+          <div className="p-2.5 rounded-xl bg-rose-50/70 border border-rose-100 text-xs space-y-2">
+            <p className="font-bold text-slate-900 truncate">
+              {currentUser?.clinicName || currentUser?.businessName || 'Cơ sở Spa Thú Cưng'}
+            </p>
+            {currentUser?.clinicAddress && (
+              <p className="text-[11px] text-slate-600 flex items-start gap-1">
+                <MapPin className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
+                <span className="line-clamp-2">{currentUser.clinicAddress}</span>
               </p>
             )}
           </div>

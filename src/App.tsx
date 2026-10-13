@@ -43,6 +43,16 @@ import {
   mockCommunityGroups 
 } from './data/mockData';
 
+const loadStorage = <T,>(key: string, fallback: T): T => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+};
+
 export default function App() {
   // Navigation & Filtering
   const [activeNavTab, setActiveNavTab] = useState<string>('feed');
@@ -50,20 +60,60 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('newest');
 
-  // Core Data State
-  const [currentUser, setCurrentUser] = useState<User | null>(currentUserInitial);
-  const [pets, setPets] = useState<Pet[]>(initialPets);
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [posts, setPosts] = useState<Post[]>(initialPosts);
+  // Core Data State with localStorage persistence
+  const [currentUser, setCurrentUser] = useState<User | null>(() => 
+    loadStorage<User | null>('vettop_current_user', currentUserInitial)
+  );
+  const [pets, setPets] = useState<Pet[]>(() => 
+    loadStorage<Pet[]>('vettop_pets', initialPets)
+  );
+  const [users, setUsers] = useState<User[]>(() => {
+    const saved = loadStorage<User[]>('vettop_users', []);
+    const combined = [...saved, ...mockUsers];
+    return combined.filter((u, i, arr) => i === arr.findIndex(t => t.id === u.id));
+  });
+  const [posts, setPosts] = useState<Post[]>(() => 
+    loadStorage<Post[]>('vettop_posts', initialPosts)
+  );
   const [adoptionPets, setAdoptionPets] = useState<AdoptionDetails[]>(mockAdoptionPets);
   const [guideArticles, setGuideArticles] = useState<GuideArticle[]>(mockGuideArticles);
-  const [toplistPlaces, setToplistPlaces] = useState<ToplistPlace[]>(mockToplistPlaces);
+  const [toplistPlaces, setToplistPlaces] = useState<ToplistPlace[]>(() => {
+    const saved = loadStorage<ToplistPlace[]>('vettop_places', []);
+    const combined = [...saved, ...mockToplistPlaces];
+    return combined.filter((p, i, arr) => i === arr.findIndex(t => t.id === p.id));
+  });
   const [groups, setGroups] = useState<CommunityGroup[]>(mockCommunityGroups);
   const [appointments, setAppointments] = useState<AppointmentBooking[]>([]);
   const [applications, setApplications] = useState<AdoptionApplication[]>([]);
 
+  // Keep localStorage in sync with real updates
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('vettop_current_user', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('vettop_current_user');
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem('vettop_users', JSON.stringify(users));
+  }, [users]);
+
+  useEffect(() => {
+    localStorage.setItem('vettop_posts', JSON.stringify(posts));
+  }, [posts]);
+
+  useEffect(() => {
+    localStorage.setItem('vettop_places', JSON.stringify(toplistPlaces));
+  }, [toplistPlaces]);
+
+  useEffect(() => {
+    localStorage.setItem('vettop_pets', JSON.stringify(pets));
+  }, [pets]);
+
   const handleLogout = () => {
     setCurrentUser(null);
+    localStorage.removeItem('vettop_current_user');
     showToast('Đã đăng xuất khỏi tài khoản VetTop.');
   };
 
@@ -398,9 +448,63 @@ export default function App() {
   };
 
   // Register New User
-  const handleRegisterNewUser = (newUser: User, initialPetName?: string, initialPetBreed?: string) => {
+  const handleRegisterNewUser = (
+    newUser: User, 
+    initialPetName?: string, 
+    initialPetBreed?: string,
+    createdPlace?: ToplistPlace
+  ) => {
     setCurrentUser(newUser);
-    setUsers([newUser, ...users]);
+    setUsers((prev) => [newUser, ...prev.filter((u) => u.id !== newUser.id)]);
+
+    // If clinic or petshop or business was created
+    if (createdPlace) {
+      setToplistPlaces((prev) => [createdPlace, ...prev.filter((p) => p.id !== createdPlace.id)]);
+
+      // Create official home feed post
+      const isVet = newUser.userType === 'vet';
+      const isShop = newUser.userType === 'petshop';
+
+      let welcomeContent = '';
+      if (isVet) {
+        welcomeContent = `🎉 [CHÀO MỪNG PHÒNG KHÁM MỚI] ${newUser.name} xin thông báo: ${newUser.clinicName || 'Phòng khám thú y'} đã chính thức hoạt động trên VetTop!\n📍 Địa chỉ: ${newUser.clinicAddress}\n📞 Hotline: ${newUser.phone || '0236 3889 999'}\n📧 Email nhận lịch khám trực tuyến: ${newUser.email}\n${newUser.hasPetShop ? '🛍️ Có tích hợp quầy Pet Shop thức ăn & phụ kiện\n' : ''}${newUser.hasSpa ? '✂️ Có tích hợp dịch vụ Spa Grooming làm đẹp\n' : ''}${newUser.hasPetHotel ? '🏨 Có dịch vụ Pet Hotel lưu trú thú cưng\n' : ''}\nKính mời quý chủ nuôi đưa bé cưng đến thăm khám và trải nghiệm dịch vụ!`;
+      } else if (isShop) {
+        welcomeContent = `🛍️ [CHÀO MỪNG CỬA HÀNG MỚI GIA NHẬP] ${newUser.clinicName || newUser.businessName || 'Cửa hàng Pet Shop'} đã chính thức có mặt trên VetTop!\n📍 Địa chỉ: ${newUser.clinicAddress}\n📞 Hotline: ${newUser.phone || '0901 234 567'}\nChuyên cung cấp thức ăn hạt dinh dưỡng, pate nhập khẩu, cát vệ sinh, đồ chơi và phụ kiện cao cấp cho thú cưng.\n${newUser.hasSpa ? '✂️ Có kèm dịch vụ Spa tắm sấy & cắt tỉa lông\n' : ''}${newUser.hasPetHotel ? '🏨 Có kèm dịch vụ trông giữ thú cưng Pet Hotel\n' : ''}\nƯu đãi 15% cho thành viên VetTop trong tuần lễ khai trương!`;
+      } else {
+        welcomeContent = `✂️ [CHÀO MỪNG CƠ SỞ MỚI] ${newUser.clinicName || 'Dịch vụ Spa & Khách sạn thú cưng'} đã sẵn sàng phục vụ các bé yêu!\n📍 Địa chỉ: ${newUser.clinicAddress}\n📞 Hotline: ${newUser.phone || '0905 111 222'}`;
+      }
+
+      const announcementPost: Post = {
+        id: `post-${Date.now()}`,
+        author: newUser,
+        createdAt: 'Vừa xong',
+        type: isVet ? 'review' : 'general',
+        location: newUser.location,
+        content: welcomeContent,
+        images: newUser.clinicLogo ? [newUser.clinicLogo] : undefined,
+        clinicReview: isVet ? {
+          clinicName: newUser.clinicName || 'Phòng khám thú y',
+          rating: 5.0,
+          reviewsCount: 1,
+          city: newUser.location || 'Đà Nẵng',
+          category: 'Phòng khám thú y',
+          address: newUser.clinicAddress,
+          clinicLogo: newUser.clinicLogo,
+          email: newUser.email,
+          phone: newUser.phone,
+          doctorName: newUser.name,
+        } : undefined,
+        likes: 1,
+        isLiked: true,
+        comments: [],
+        shares: 0,
+        isSaved: false,
+      };
+
+      setPosts((prev) => [announcementPost, ...prev]);
+      setActiveNavTab('feed');
+      showToast(`Đã hiển thị ${createdPlace.name} lên Trang chủ và danh bạ Toplist!`);
+    }
 
     if (initialPetName) {
       const firstPet: Pet = {
@@ -416,7 +520,7 @@ export default function App() {
         neutered: false,
         notes: 'Bé cưng của gia đình.',
       };
-      setPets([firstPet]);
+      setPets((prev) => [firstPet, ...prev]);
     }
   };
 
@@ -539,6 +643,24 @@ export default function App() {
                   setActiveFilterType={setActiveFilterType}
                   sortBy={sortBy}
                   setSortBy={setSortBy}
+                  places={toplistPlaces}
+                  onOpenClinicDetails={(p) => {
+                    setSelectedClinic({
+                      clinicName: p.name,
+                      rating: p.rating,
+                      reviewsCount: p.reviewsCount,
+                      city: p.city,
+                      category: p.category === 'clinic' ? 'Phòng khám thú y' : p.category === 'petshop' ? 'Cửa hàng Pet Shop' : 'Spa & Pet Hotel',
+                      address: p.address,
+                      clinicLogo: p.logoUrl,
+                      email: p.email,
+                      phone: p.phone,
+                      doctorName: p.doctorName,
+                    });
+                    setShowClinicDetailModal(true);
+                  }}
+                  onOpenBooking={(p) => handleOpenBooking(p)}
+                  onOpenRegisterBusiness={() => setShowAuthModal(true)}
                 />
 
                 {/* Posts List */}
@@ -789,9 +911,10 @@ export default function App() {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         currentUser={currentUser}
+        registeredUsers={users}
         onLoginAsUser={(u) => {
           setCurrentUser(u);
-          showToast(`Đã chuyển sang tài khoản ${u.name}`);
+          showToast(`Đã đăng nhập tài khoản: ${u.name}`);
         }}
         onRegisterNewUser={handleRegisterNewUser}
         onLogout={handleLogout}
